@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, type ReactNode, type Dispatch } from 'react';
+import { createContext, useCallback, useContext, useMemo, useReducer, type ReactNode, type Dispatch } from 'react';
 import type { Producto, ApiError } from '../types';
 import { productoService } from '../services/modules/producto.service.ts';
 
@@ -63,7 +63,7 @@ const ProductoContext = createContext<ProductoContextValue | null>(null);
 export function ProductoProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(productoReducer, initialState);
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     dispatch({ type: 'FETCH_START' });
     try {
       const productos = await productoService.getAll();
@@ -71,27 +71,32 @@ export function ProductoProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       dispatch({ type: 'FETCH_ERROR', payload: err as ApiError });
     }
-  };
+  }, []);
 
-  const create = async (data: Omit<Producto, 'id'>): Promise<Producto> => {
+  const create = useCallback(async (data: Omit<Producto, 'id'>): Promise<Producto> => {
     const nuevo = await productoService.create(data as Parameters<typeof productoService.create>[0]);
     dispatch({ type: 'CREATE_SUCCESS', payload: nuevo });
     return nuevo;
-  };
+  }, []);
 
-  const update = async (id: number, data: Omit<Producto, 'id'>): Promise<Producto> => {
+  const update = useCallback(async (id: number, data: Omit<Producto, 'id'>): Promise<Producto> => {
     const actualizado = await productoService.update(id, data as Parameters<typeof productoService.update>[1]);
     dispatch({ type: 'UPDATE_SUCCESS', payload: actualizado });
     return actualizado;
-  };
+  }, []);
 
-  const remove = async (id: number) => {
+  const remove = useCallback(async (id: number) => {
     await productoService.delete(id);
     dispatch({ type: 'DELETE_SUCCESS', payload: id });
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ state, dispatch, fetchAll, create, update, remove }),
+    [state, dispatch, fetchAll, create, update, remove]
+  );
 
   return (
-    <ProductoContext.Provider value={{ state, dispatch, fetchAll, create, update, remove }}>
+    <ProductoContext.Provider value={value}>
       {children}
     </ProductoContext.Provider>
   );

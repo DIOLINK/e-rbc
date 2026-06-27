@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, type ReactNode, type Dispatch } from 'react';
+import { createContext, useCallback, useContext, useMemo, useReducer, type ReactNode, type Dispatch } from 'react';
 import type { Pedido, ApiError } from '../types';
 import { pedidoService } from '../services/modules/pedido.service.ts';
 
@@ -48,7 +48,7 @@ const PedidoContext = createContext<PedidoContextValue | null>(null);
 export function PedidoProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(pedidoReducer, initialState);
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     dispatch({ type: 'FETCH_START' });
     try {
       const pedidos = await pedidoService.getAll();
@@ -56,20 +56,25 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       dispatch({ type: 'FETCH_ERROR', payload: err as ApiError });
     }
-  };
+  }, []);
 
-  const getById = async (id: number): Promise<Pedido> => {
+  const getById = useCallback(async (id: number): Promise<Pedido> => {
     return pedidoService.getById(id);
-  };
+  }, []);
 
-  const create = async (data: Parameters<typeof pedidoService.create>[0]): Promise<Pedido> => {
+  const create = useCallback(async (data: Parameters<typeof pedidoService.create>[0]): Promise<Pedido> => {
     const nuevo = await pedidoService.create(data);
     dispatch({ type: 'CREATE_SUCCESS', payload: nuevo });
     return nuevo;
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ state, dispatch, fetchAll, getById, create }),
+    [state, dispatch, fetchAll, getById, create]
+  );
 
   return (
-    <PedidoContext.Provider value={{ state, dispatch, fetchAll, getById, create }}>
+    <PedidoContext.Provider value={value}>
       {children}
     </PedidoContext.Provider>
   );

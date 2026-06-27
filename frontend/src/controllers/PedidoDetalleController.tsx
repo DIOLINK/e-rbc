@@ -13,19 +13,21 @@ export function PedidoDetalleController() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPedido = async () => {
       if (!id) return;
       setLoading(true);
       try {
         const data = await obtenerPedido(Number(id));
-        setPedido(data);
+        if (!cancelled) setPedido(data);
       } catch {
-        setPedido(null);
+        if (!cancelled) setPedido(null);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchPedido();
+    return () => { cancelled = true; };
   }, [id, obtenerPedido]);
 
   return (
