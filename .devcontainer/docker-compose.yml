@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: java-dev-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - java-dev-net
+
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: java-dev-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "5173:5173"
+    volumes:
+      - ..:/workspace:cached
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+    networks:
+      - java-dev-net
+
+volumes:
+  mysql-data:
+    name: java-dev-mysql-data
+
+networks:
+  java-dev-net:
+    name: java-dev-network

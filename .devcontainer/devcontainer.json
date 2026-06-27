@@ -1,0 +1,44 @@
+{
+  "name": "Java Monorepo DevContainer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-lombok",
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack"
+      ],
+      "settings": {
+        "java.jdt.ls.java.home": "/usr/local/jdk-22",
+        "java.configuration.runtimes": [
+          {
+            "name": "JavaSE-22",
+            "path": "/usr/local/jdk-22",
+            "default": true
+          }
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "forwardPorts": [3306, 8080, 5173],
+  "portsAttributes": {
+    "3306": {
+      "label": "MySQL",
+      "onAutoForward": "silent"
+    },
+    "8080": {
+      "label": "Spring Boot",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "nvm install 24.16.0 && nvm alias default 24.16.0 && pnpm --version && nohup mvn spring-boot:run -f /workspace/backend/pom.xml > /tmp/spring-boot.log 2>&1 &",
+  "remoteUser": "vscode"
+}

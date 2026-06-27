@@ -1,0 +1,8 @@
+.env
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+old/
+*.class
+.DS_Store
